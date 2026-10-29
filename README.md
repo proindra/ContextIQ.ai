@@ -6,7 +6,8 @@
 
 <img src="https://img.shields.io/badge/Frontend-Vite%20%2B%20TypeScript-7C3AED?style=for-the-badge&logo=vite&logoColor=white&labelColor=312E81" alt="Vite and TypeScript" />
 <img src="https://img.shields.io/badge/Backend-FastAPI-14B8A6?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=042F2E" alt="FastAPI" />
-<img src="https://img.shields.io/badge/Orchestration-Uvicorn%20%2B%20LangGraph-2FE85C?style=for-the-badge&logo=langchain&logoColor=white&labelColor=10300A" alt="Uvicorn and LangGraph orchestration" />
+<img src="https://img.shields.io/badge/Server-Uvicorn-2FE85C?style=for-the-badge&logo=gunicorn&logoColor=white&labelColor=10300A" alt="Uvicorn" />
+<img src="https://img.shields.io/badge/Orchestration-LangGraph-2FE85C?style=for-the-badge&logo=langchain&logoColor=white&labelColor=10300A" alt="LangGraph orchestration" />
 <img src="https://img.shields.io/badge/LLM-Groq-F97316?style=for-the-badge&logo=groq&logoColor=white&labelColor=431407" alt="Groq" />
 <img src="https://img.shields.io/badge/Embeddings-Hugging%20Face-A855F7?style=for-the-badge&logo=huggingface&logoColor=white&labelColor=3B0764" alt="Hugging Face embeddings" />
 
