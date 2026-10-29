@@ -341,9 +341,6 @@ h1, h2, h3, h4, p { margin-top: 0; }
 }
 
 .footer-brand { justify-self: start; font-size: 1.25rem; }
-.footer > span:nth-child(2) { justify-self: center; text-align: center; }
-.footer-note { justify-self: end; color: #828087; font-size: 8px; letter-spacing: 1px; }
-.footer-note i { margin-left: 5px; color: var(--green); font-size: 12px; font-style: normal; }
 
 [data-reveal] { opacity: 0; transform: translateY(17px); transition: opacity 650ms ease, transform 650ms cubic-bezier(0.2, 0.7, 0.2, 1); }
 [data-reveal].is-visible { opacity: 1; transform: translateY(0); }
@@ -395,9 +392,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
   .step-card { min-height: 0; padding: 25px 22px 22px; }
   .step-symbol { margin-bottom: 22px; }
   .step-card p { margin-bottom: 20px; }
-  .footer { width: calc(100% - 36px); min-height: 120px; grid-template-columns: 1fr auto; row-gap: 12px; }
-  .footer > span:nth-child(2) { grid-column: 1 / -1; grid-row: 2; justify-self: start; text-align: left; }
-  .footer-note { grid-column: 2; grid-row: 1; }
+  .footer { width: calc(100% - 36px); min-height: 88px; grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {

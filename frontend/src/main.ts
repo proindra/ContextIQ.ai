@@ -105,8 +105,6 @@ app.innerHTML = `
   </main>
   <footer class="footer">
     <a class="brand footer-brand" href="/">contextiq.ai</a>
-    <span>Local-first embeddings. Answers with context.</span>
-    <span class="footer-note">BUILT TO FOLLOW THE THREAD <i>✳</i></span>
   </footer>
 `;
 
