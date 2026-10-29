@@ -107,6 +107,21 @@ Open the Vite URL printed in the terminal (usually `http://127.0.0.1:5173`).
 The Vite development server proxies `/api` requests to the FastAPI backend.
 Keep both servers running while using the app.
 
+### Publish the frontend to GitHub Pages
+
+The GitHub Actions workflow deploys only `frontend/` when changes are pushed
+to `main`. In the repository settings, set **Pages → Build and deployment →
+Source** to **GitHub Actions**. You can also run the workflow manually from
+the **Actions** tab.
+
+To enable search on the published site, add a repository Actions variable named
+`VITE_API_BASE_URL` containing the HTTPS origin of your deployed FastAPI API,
+without a trailing slash (for example, `https://api.example.com`). Configure
+the backend's `FRONTEND_ORIGINS` to allow the GitHub Pages site origin
+(`https://proindra.github.io`). The API must be deployed separately; GitHub
+Pages hosts only the static frontend. No API key or backend secret is included
+in the frontend build.
+
 ## API
 
 ### `GET /api/health`
@@ -185,6 +200,9 @@ ContextIQ/
 │       ├── components/
 │       ├── services/
 │       └── types/
+├── .github/
+│   └── workflows/
+│       └── deploy-frontend.yml
 ├── backend/
 │   ├── main.py
 │   ├── requirements.txt
