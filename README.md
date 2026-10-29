@@ -148,32 +148,27 @@ explicit `502` response.
 
 ```mermaid
 flowchart LR
-    U[Vanilla TypeScript UI] -->|POST /api/search| F[FastAPI]
-    F --> G[LangGraph workflow]
-    G --> R[Retriever node]
-    R --> V[FAISS index]
-    G --> A[ReAct responder]
-    A -->|choose a tool| T{Tools}
-    T --> RT[Indexed document retriever]
-    T --> W[Wikipedia HTTPS API]
-    RT --> V
-    RT --> A
-    W --> A
-    A -->|answer and source passages| F
-    F --> U
-    E[Local Hugging Face embeddings] --> V
-    L[Groq chat model] --> A
+    User --> UI[Frontend]
+    UI -->|Question| API[FastAPI]
+    API --> Retriever
+    subgraph Workflow["LangGraph RAG"]
+        Retriever[Retrieve passages] --> Agent[ReAct agent]
+    end
+    Retriever --> Index[(FAISS index)]
+    Embeddings[Hugging Face embeddings] --> Index
+    Agent --> Groq[Groq model]
+    Agent --> Docs[Document search]
+    Agent --> Wiki[Wikipedia]
+    Docs --> Index
+    Agent -->|Answer and sources| API
+    API --> UI
 ```
 
-At startup, `backend/main.py` loads configured web sources and PDFs through
-`DocumentProcessor`, splits them into 500-character chunks with 50-character
-overlap, embeds them locally, and builds the FAISS index. The index lives in
-memory and is rebuilt on backend restart.
-
-For each search, the outer LangGraph workflow retrieves source passages and
-then invokes the ReAct agent. The agent can call the document retriever or
-search Wikipedia before composing its answer. The API returns that answer with
-the passages retrieved by the workflow.
+At startup, the backend chunks configured sources, embeds them with
+`sentence-transformers/all-MiniLM-L6-v2`, and builds an in-memory FAISS index.
+For each question, LangGraph retrieves relevant passages and runs a ReAct agent
+that can search the indexed documents or Wikipedia. The API returns the answer
+with its source passages.
 
 ## Project structure
 
