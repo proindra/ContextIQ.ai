@@ -1,26 +1,28 @@
 <div align="center">
 
-<p><img src="assets/contextiq-ai-gradient.gif" alt="ContextIQ.ai" width="330" /></p>
+<img src="assets/contextiq-ai-gradient.gif" alt="ContextIQ.ai" width="280" />
 
-<p><strong>Search your documents. Get answers with sources.</strong></p>
+<h1>Answers from your documents, with sources.</h1>
 
 <p>
-<img src="https://img.shields.io/badge/Frontend-Vite%20%2B%20TypeScript-7C3AED?style=for-the-badge&logo=vite&logoColor=white&labelColor=312E81" alt="Vite and TypeScript" />
-<img src="https://img.shields.io/badge/Backend-FastAPI-14B8A6?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=042F2E" alt="FastAPI" />
-<img src="https://img.shields.io/badge/Server-Uvicorn-2FE85C?style=for-the-badge&logo=gunicorn&logoColor=white&labelColor=10300A" alt="Uvicorn" />
+Ask a question across your PDFs and web sources. Get a clear answer grounded in the passages that support it.
 </p>
+
 <p>
-<img src="https://img.shields.io/badge/Orchestration-LangGraph-2FE85C?style=for-the-badge&logo=langchain&logoColor=white&labelColor=10300A" alt="LangGraph orchestration" />
-<img src="https://img.shields.io/badge/LLM-Groq-F97316?style=for-the-badge&logo=groq&logoColor=white&labelColor=431407" alt="Groq" />
-<img src="https://img.shields.io/badge/Embeddings-Hugging%20Face-A855F7?style=for-the-badge&logo=huggingface&logoColor=white&labelColor=3B0764" alt="Hugging Face embeddings" />
+<img src="https://img.shields.io/badge/UI-Vite%20%2B%20TypeScript-7C3AED?style=flat-square&logo=vite&logoColor=white" alt="Vite and TypeScript" />
+<img src="https://img.shields.io/badge/API-FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
+<img src="https://img.shields.io/badge/Orchestration-LangGraph-2E7D32?style=flat-square&logo=langchain&logoColor=white" alt="LangGraph" />
+<img src="https://img.shields.io/badge/LLM-Groq-F97316?style=flat-square&logo=groq&logoColor=white" alt="Groq" />
+<img src="https://img.shields.io/badge/Embeddings-Hugging%20Face-FFD21E?style=flat-square&logo=huggingface&logoColor=black" alt="Hugging Face embeddings" />
+</p>
+
+<p>
+<a href="#getting-started">Get started</a> ·
+<a href="#features">Explore features</a> ·
+<a href="#rag-architecture">How it works</a>
 </p>
 
 </div>
-
-<p align="center">
-ContextIQ.ai searches your documents, uses a ReAct agent to gather context, and returns answers with source passages.
-The frontend is a lightweight Vite + TypeScript application; the backend is a FastAPI service powered by LangGraph, FAISS, Groq, and Wikipedia.
-</p>
 
 ## Features
 
@@ -215,29 +217,59 @@ additional passages returned by those tools.
 ## Project structure
 
 ```text
-ContextIQ/
+contextiq.ai/
+├── .github/workflows/
+│   └── deploy-frontend.yml
+├── assets/
+│   ├── contextiq-ai-gradient.gif
+│   ├── contextiq-brand.gif
+│   └── contextiq-brand.png
+├── backend/
+│   ├── .env.example
+│   ├── .python-version
+│   ├── api/
+│   │   ├── routes.py
+│   │   └── schemas.py
+│   ├── data/
+│   │   ├── attention.pdf
+│   │   └── url.txt
+│   ├── src/
+│   │   ├── config/config.py
+│   │   ├── document_ingestion/document_processor.py
+│   │   ├── graph_builder/graph_builder.py
+│   │   ├── node/reactnode.py
+│   │   ├── state/rag_state.py
+│   │   └── vectorstore/vectorstore.py
+│   ├── tests/
+│   │   ├── test_api.py
+│   │   └── test_pipeline.py
+│   ├── cli.py
+│   ├── main.py
+│   ├── pyproject.toml
+│   ├── requirements.txt
+│   └── uv.lock
 ├── frontend/
+│   ├── public/favicon.svg
+│   ├── src/
+│   │   ├── animations/
+│   │   │   ├── hero.ts
+│   │   │   ├── scroll.ts
+│   │   │   └── transitions.ts
+│   │   ├── components/
+│   │   │   ├── answer-panel.ts
+│   │   │   ├── loading-indicator.ts
+│   │   │   ├── navbar.ts
+│   │   │   └── search-panel.ts
+│   │   ├── services/api.ts
+│   │   ├── types/api.ts
+│   │   ├── main.ts
+│   │   ├── style.css
+│   │   └── vite-env.d.ts
 │   ├── index.html
 │   ├── package.json
-│   ├── vite.config.ts
-│   └── src/
-│       ├── main.ts
-│       ├── style.css
-│       ├── animations/
-│       ├── components/
-│       ├── services/
-│       └── types/
-├── .github/
-│   └── workflows/
-│       └── deploy-frontend.yml
-├── backend/
-│   ├── main.py
-│   ├── requirements.txt
-│   ├── pyproject.toml
-│   ├── api/
-│   ├── src/
-│   ├── data/
-│   └── tests/
+│   ├── package-lock.json
+│   ├── tsconfig.json
+│   └── vite.config.ts
 ├── .gitignore
 └── README.md
 ```
