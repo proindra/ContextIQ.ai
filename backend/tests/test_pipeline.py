@@ -128,3 +128,50 @@ def test_generate_answer_keeps_indexed_sources_without_tool_calls() -> None:
     )
 
     assert result.retrieved_docs == [document]
+
+
+def test_explicit_wikipedia_question_only_returns_wikipedia_sources() -> None:
+    llm_input: list = []
+
+    class FakeLLM:
+        def invoke(self, input: list) -> AIMessage:
+            llm_input.extend(input)
+            return AIMessage(content="India is a country in South Asia.")
+
+    nodes = RAGNodes(retriever=None, llm=FakeLLM())
+    wiki_queries: list[str] = []
+
+    def search_wikipedia(query: str) -> str:
+        wiki_queries.append(query)
+        return json.dumps(
+            [
+                {
+                    "title": "India",
+                    "source": "https://en.wikipedia.org/wiki/India",
+                    "content": "India is a country in South Asia.",
+                }
+            ]
+        )
+
+    nodes._search_wikipedia = search_wikipedia
+    state = RAGState(
+        question="Search India Wikipedia",
+        retrieved_docs=[
+            Document(
+                page_content="Unrelated attention paper.",
+                metadata={"title": "attention.pdf", "source": "attention.pdf"},
+            )
+        ],
+    )
+
+    result = nodes.generate_answer(state)
+
+    assert wiki_queries == ["India"]
+    assert len(llm_input) == 1
+    assert "attention.pdf" not in llm_input[0].content
+    assert "Wikipedia passages" in llm_input[0].content
+    assert nodes._agent is None
+    assert [doc.metadata["title"] for doc in result.retrieved_docs] == ["India"]
+    assert result.retrieved_docs[0].metadata["source"] == (
+        "https://en.wikipedia.org/wiki/India"
+    )

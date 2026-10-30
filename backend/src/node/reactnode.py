@@ -2,7 +2,8 @@
 
 import json
 import os
-from typing import List, Optional
+import re
+from typing import List
 from urllib.parse import quote
 
 from src.state.rag_state import RAGState
@@ -142,50 +143,67 @@ class RAGNodes:
         """
         Generate answer using ReAct agent with retriever + wikipedia.
         """
-        if self._agent is None:
-            self._build_agent()
+        wikipedia_requested = bool(re.search(r"\bwikipedia\b", state.question, re.IGNORECASE))
+        if wikipedia_requested:
+            wikipedia_query = re.sub(
+                r"\bwikipedia\b", "", state.question, flags=re.IGNORECASE
+            ).strip()
+            wikipedia_query = re.sub(
+                r"^(?:please\s+)?(?:search|find|look\s+up)\s+",
+                "",
+                wikipedia_query,
+                flags=re.IGNORECASE,
+            )
+            wikipedia_query = re.sub(
+                r"^(?:for|about|on)\s+",
+                "",
+                wikipedia_query,
+                flags=re.IGNORECASE,
+            )
+            wikipedia_query = re.sub(
+                r"\s+(?:on|in)$",
+                "",
+                wikipedia_query,
+                flags=re.IGNORECASE,
+            ).strip()
+            wikipedia_docs = self._deserialize_documents(
+                self._search_wikipedia(wikipedia_query) if wikipedia_query else "[]"
+            )
+            user_message = (
+                f"Question: {state.question}\n\n"
+                "The user explicitly requested Wikipedia. Answer using only these "
+                "Wikipedia passages; do not use or cite the indexed documents. "
+                "If no passages are provided, say you could not find a Wikipedia source.\n"
+                "Wikipedia passages (JSON):\n"
+                f"{self._serialize_documents(wikipedia_docs)}"
+            )
+            answer_message = self.llm.invoke([HumanMessage(content=user_message)])
+            messages = []
+            answer = getattr(answer_message, "content", None)
+        else:
+            if self._agent is None:
+                self._build_agent()
 
-        indexed_context = self._serialize_documents(state.retrieved_docs)
-        user_message = (
-            f"Question: {state.question}\n\n"
-            "Passages retrieved from the indexed documents (JSON):\n"
-            f"{indexed_context}"
-        )
-        result = self._agent.invoke({"messages": [HumanMessage(content=user_message)]})
+            user_message = (
+                f"Question: {state.question}\n\n"
+                "Passages retrieved from the indexed documents (JSON):\n"
+                f"{self._serialize_documents(state.retrieved_docs)}"
+            )
+            result = self._agent.invoke({"messages": [HumanMessage(content=user_message)]})
+            messages = result.get("messages", [])
+            answer = None
+            if messages:
+                answer = getattr(messages[-1], "content", None)
 
-        messages = result.get("messages", [])
-        answer: Optional[str] = None
-        if messages:
-            answer_msg = messages[-1]
-            answer = getattr(answer_msg, "content", None)
-
-        retrieved_docs = list(state.retrieved_docs)
+        retrieved_docs = wikipedia_docs if wikipedia_requested else list(state.retrieved_docs)
         document_signatures = {
             self._document_signature(document) for document in retrieved_docs
         }
-        for message in messages:
+        tool_messages = [] if wikipedia_requested else messages
+        for message in tool_messages:
             if not isinstance(message, ToolMessage):
                 continue
-            try:
-                tool_documents = json.loads(message.content)
-            except (TypeError, json.JSONDecodeError):
-                continue
-            if not isinstance(tool_documents, list):
-                continue
-            for document in tool_documents:
-                if (
-                    not isinstance(document, dict)
-                    or not isinstance(document.get("title"), str)
-                    or not isinstance(document.get("content"), str)
-                ):
-                    continue
-                tool_document = Document(
-                    page_content=document["content"],
-                    metadata={
-                        "title": document["title"],
-                        "source": document.get("source"),
-                    },
-                )
+            for tool_document in self._deserialize_documents(message.content):
                 signature = self._document_signature(tool_document)
                 if signature not in document_signatures:
                     retrieved_docs.append(tool_document)
@@ -196,6 +214,28 @@ class RAGNodes:
             retrieved_docs=retrieved_docs,
             answer=answer or "Could not generate answer."
         )
+
+    @staticmethod
+    def _deserialize_documents(serialized: str) -> List[Document]:
+        try:
+            documents = json.loads(serialized)
+        except (TypeError, json.JSONDecodeError):
+            return []
+        if not isinstance(documents, list):
+            return []
+        return [
+            Document(
+                page_content=document["content"],
+                metadata={
+                    "title": document["title"],
+                    "source": document.get("source"),
+                },
+            )
+            for document in documents
+            if isinstance(document, dict)
+            and isinstance(document.get("title"), str)
+            and isinstance(document.get("content"), str)
+        ]
 
     @staticmethod
     def _document_signature(document: Document) -> tuple[str, str]:

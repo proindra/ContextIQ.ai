@@ -169,28 +169,35 @@ explicit `502` response.
 flowchart LR
     User --> UI[Frontend]
     UI -->|Question| API[FastAPI]
-    API --> Retriever
+    API --> Retrieve
     subgraph Workflow["LangGraph RAG"]
-        Retriever[Retrieve passages] --> Agent[ReAct agent]
+        Retrieve[Retrieve indexed passages] --> Responder{Explicit Wikipedia request?}
+        Responder -->|Yes| WikiLookup[Wikipedia API]
+        WikiLookup --> WikiAnswer[Answer from Wikipedia passages only]
+        Responder -->|No| Agent[ReAct agent]
+        Agent --> AgentAnswer[Answer from indexed context and tool results]
     end
-    Retriever --> Index[(FAISS index)]
+    Index[(FAISS index)] --> Retrieve
     Embeddings[Hugging Face embeddings] --> Index
     Agent --> Groq[Groq model]
-    Agent --> Docs[Document search]
-    Agent --> Wiki[Wikipedia]
-    Docs --> Index
-    Agent -->|Answer and sources| API
-    API --> UI
+    Agent -->|As needed| DocSearch[Indexed document search]
+    DocSearch --> Retrieve
+    Agent -->|Fallback when needed| WikiTool[Wikipedia search tool]
+    WikiTool --> WikiLookup
+    WikiAnswer -->|Answer and Wikipedia sources only| API
+    AgentAnswer -->|Answer and sources used| API
+    API -->|Answer and sources| UI
 ```
 
 At startup, the backend chunks configured sources, embeds them with
 `sentence-transformers/all-MiniLM-L6-v2`, and builds an in-memory FAISS index.
-For each question, LangGraph retrieves relevant passages and supplies them to
-the ReAct agent as its primary evidence. The agent can search the indexed
-documents for more passages and falls back to Wikipedia when the indexed
-content cannot answer the question. Responses retain the original FAISS
-passages alongside any additional tool sources, and local document cards show
-their filenames.
+For each question, LangGraph first retrieves relevant passages. If the question
+explicitly requests Wikipedia, the responder searches Wikipedia directly and
+answers using only those Wikipedia passages; the initially retrieved indexed
+passages are not included as sources. For other questions, the responder sends
+the indexed passages to the ReAct agent as primary evidence. The agent can
+search the index for more passages and use Wikipedia when needed. Responses
+include sources from the selected answer path.
 
 ## Project structure
 
