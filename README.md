@@ -1,8 +1,6 @@
 <div align="center">
 
-<p><img src="assets/contextiq-ai-gradient.gif" alt="ContextIQ.ai" width="330" /></p>
-
-<p><strong>Search your documents. Get answers with sources.</strong></p>
+<p><img src="assets/contextiq-ai-gradient.gif" alt="ContextIQ.ai" width="330" /><br /><strong>Search your documents. Get answers with sources.</strong></p>
 
 <p>
 <img src="https://img.shields.io/badge/Frontend-Vite%20%2B%20TypeScript-7C3AED?style=for-the-badge&logo=vite&logoColor=white&labelColor=312E81" alt="Vite and TypeScript" />
