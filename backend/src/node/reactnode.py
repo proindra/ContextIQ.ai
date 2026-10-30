@@ -1,12 +1,15 @@
 """LangGraph nodes for RAG workflow + ReAct Agent inside generate_content"""
 
+import json
 import os
 from typing import List, Optional
+from urllib.parse import quote
+
 from src.state.rag_state import RAGState
 
 from langchain_core.documents import Document
 from langchain_core.tools import Tool
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, ToolMessage
 from langgraph.prebuilt import create_react_agent
 import requests
 
@@ -32,14 +35,7 @@ class RAGNodes:
 
         def retriever_tool_fn(query: str) -> str:
             docs: List[Document] = self.retriever.invoke(query)
-            if not docs:
-                return "No documents found."
-            merged = []
-            for i, d in enumerate(docs[:8], start=1):
-                meta = d.metadata if hasattr(d, "metadata") else {}
-                title = meta.get("title") or meta.get("source") or f"doc_{i}"
-                merged.append(f"[{i}] {title}\n{d.page_content}")
-            return "\n\n".join(merged)
+            return self._serialize_documents(docs[:8])
 
         retriever_tool = Tool(
             name="retriever",
@@ -54,6 +50,28 @@ class RAGNodes:
         )
 
         return [retriever_tool, wikipedia_tool]
+
+    @staticmethod
+    def _serialize_documents(documents: List[Document]) -> str:
+        return json.dumps(
+            [
+                {
+                    "title": str(
+                        document.metadata.get("title")
+                        or document.metadata.get("source")
+                        or f"Source {index}"
+                    ),
+                    "source": (
+                        str(document.metadata["source"])
+                        if document.metadata.get("source") is not None
+                        else None
+                    ),
+                    "content": document.page_content,
+                }
+                for index, document in enumerate(documents, start=1)
+            ],
+            ensure_ascii=False,
+        )
 
     @staticmethod
     def _search_wikipedia(query: str) -> str:
@@ -77,7 +95,7 @@ class RAGNodes:
         search_response.raise_for_status()
         search_results = search_response.json()["query"]["search"]
         if not search_results:
-            return "No good Wikipedia Search Result was found."
+            return "[]"
 
         page_response = requests.get(
             endpoint,
@@ -97,11 +115,15 @@ class RAGNodes:
         pages = page_response.json()["query"]["pages"]
 
         summaries = [
-            f"Page: {result['title']}\nSummary: {pages[str(result['pageid'])].get('extract', '')}"
+            {
+                "title": result["title"],
+                "source": "https://en.wikipedia.org/wiki/" + quote(result["title"].replace(" ", "_")),
+                "content": pages[str(result["pageid"])].get("extract", ""),
+            }
             for result in search_results
             if pages[str(result["pageid"])].get("extract")
         ]
-        return "\n\n".join(summaries) or "No good Wikipedia Search Result was found."
+        return json.dumps(summaries, ensure_ascii=False)
 
     def _build_agent(self):
         """ReAct agent with tools"""
@@ -128,8 +150,40 @@ class RAGNodes:
             answer_msg = messages[-1]
             answer = getattr(answer_msg, "content", None)
 
+        used_tools = {
+            message.name
+            for message in messages
+            if isinstance(message, ToolMessage)
+        }
+        retrieved_docs = []
+        if used_tools:
+            for message in messages:
+                if not isinstance(message, ToolMessage):
+                    continue
+                try:
+                    tool_documents = json.loads(message.content)
+                except (TypeError, json.JSONDecodeError):
+                    continue
+                if not isinstance(tool_documents, list):
+                    continue
+                retrieved_docs.extend(
+                    Document(
+                        page_content=document["content"],
+                        metadata={
+                            "title": document["title"],
+                            "source": document.get("source"),
+                        },
+                    )
+                    for document in tool_documents
+                    if isinstance(document, dict)
+                    and isinstance(document.get("title"), str)
+                    and isinstance(document.get("content"), str)
+                )
+        else:
+            retrieved_docs = state.retrieved_docs
+
         return RAGState(
             question=state.question,
-            retrieved_docs=state.retrieved_docs,
+            retrieved_docs=retrieved_docs,
             answer=answer or "Could not generate answer."
         )

@@ -1,7 +1,12 @@
+import json
+
 from langchain_core.documents import Document
 from langchain_core.embeddings import Embeddings
+from langchain_core.messages import AIMessage, ToolMessage
 
 from src.document_ingestion.document_processor import DocumentProcessor
+from src.node.reactnode import RAGNodes
+from src.state.rag_state import RAGState
 from src.vectorstore.vectorstore import VectorStore
 
 
@@ -42,3 +47,45 @@ def test_faiss_retriever_returns_relevant_document() -> None:
 
     assert results
     assert results[0].metadata["title"] == "Agents"
+
+
+def test_generate_answer_returns_sources_from_agent_tool_calls() -> None:
+    class FakeAgent:
+        def invoke(self, _input: dict) -> dict:
+            return {
+                "messages": [
+                    ToolMessage(
+                        content=json.dumps(
+                            [
+                                {
+                                    "title": "India",
+                                    "source": "https://en.wikipedia.org/wiki/India",
+                                    "content": "India is a country in South Asia.",
+                                }
+                            ]
+                        ),
+                        tool_call_id="wiki-search",
+                        name="wikipedia",
+                    ),
+                    AIMessage(content="India is a country in South Asia."),
+                ]
+            }
+
+    nodes = RAGNodes(retriever=None, llm=None)
+    nodes._agent = FakeAgent()
+    state = RAGState(
+        question="India Wikipedia",
+        retrieved_docs=[
+            Document(
+                page_content="Unrelated PDF content",
+                metadata={"title": "attention.pdf", "source": "attention.pdf"},
+            )
+        ],
+    )
+
+    result = nodes.generate_answer(state)
+
+    assert result.answer == "India is a country in South Asia."
+    assert len(result.retrieved_docs) == 1
+    assert result.retrieved_docs[0].metadata["title"] == "India"
+    assert result.retrieved_docs[0].metadata["source"] == "https://en.wikipedia.org/wiki/India"
