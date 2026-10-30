@@ -12,12 +12,22 @@ function createSourceCard(source: SourceDocument, index: number): HTMLElement {
   body.className = "source-body";
   const title = document.createElement("h4");
   title.textContent = source.title;
+  const documentSource = source.source && !/^https?:\/\//i.test(source.source)
+    ? document.createElement("span")
+    : null;
+  if (documentSource) {
+    const filename = source.source?.split(/[\\/]/).pop() || source.source;
+    documentSource.className = "source-origin";
+    documentSource.textContent = `FAISS document · ${filename}`;
+  }
   const content = document.createElement("p");
   content.textContent = source.content;
-  body.append(title, content);
+  body.append(title);
+  if (documentSource) body.append(documentSource);
+  body.append(content);
 
   card.append(number, body);
-  if (source.source?.startsWith("https://")) {
+  if (source.source && /^https?:\/\//i.test(source.source)) {
     const link = document.createElement("a");
     link.className = "source-link";
     link.href = source.source;

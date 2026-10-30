@@ -285,6 +285,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 .source-number { padding-top: 2px; color: var(--green); font-size: 10px; }
 .source-body { min-width: 0; }
 .source-body h4 { margin: 0 0 6px; color: #e2e2dc; font-size: 12px; font-weight: 600; }
+.source-origin { display: block; margin: -2px 0 6px; overflow-wrap: anywhere; color: #82827d; font-size: 10px; }
 .source-body p { display: -webkit-box; overflow: hidden; margin: 0; color: #aaa9a1; font-size: 11px; line-height: 1.7; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .source-link { margin-left: auto; color: var(--green); }
 .error-card { align-items: flex-start; border-color: rgba(255, 131, 157, 0.24); }

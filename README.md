@@ -181,9 +181,12 @@ flowchart LR
 
 At startup, the backend chunks configured sources, embeds them with
 `sentence-transformers/all-MiniLM-L6-v2`, and builds an in-memory FAISS index.
-For each question, LangGraph retrieves relevant passages and runs a ReAct agent
-that can search the indexed documents or Wikipedia. The API returns the answer
-with its source passages.
+For each question, LangGraph retrieves relevant passages and supplies them to
+the ReAct agent as its primary evidence. The agent can search the indexed
+documents for more passages and falls back to Wikipedia when the indexed
+content cannot answer the question. Responses retain the original FAISS
+passages alongside any additional tool sources, and local document cards show
+their filenames.
 
 ## Project structure
 

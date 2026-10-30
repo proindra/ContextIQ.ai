@@ -50,34 +50,50 @@ def test_faiss_retriever_returns_relevant_document() -> None:
 
 
 def test_generate_answer_returns_sources_from_agent_tool_calls() -> None:
+    agent_input: dict = {}
+
     class FakeAgent:
-        def invoke(self, _input: dict) -> dict:
+        def invoke(self, input: dict) -> dict:
+            agent_input.update(input)
             return {
                 "messages": [
                     ToolMessage(
                         content=json.dumps(
                             [
                                 {
-                                    "title": "India",
-                                    "source": "https://en.wikipedia.org/wiki/India",
-                                    "content": "India is a country in South Asia.",
+                                    "title": "attention.pdf",
+                                    "source": "attention.pdf",
+                                    "content": "Attention lets tokens weigh other tokens.",
+                                }
+                            ]
+                        ),
+                        tool_call_id="retriever-search",
+                        name="retriever",
+                    ),
+                    ToolMessage(
+                        content=json.dumps(
+                            [
+                                {
+                                    "title": "Attention (machine learning)",
+                                    "source": "https://en.wikipedia.org/wiki/Attention_(machine_learning)",
+                                    "content": "Attention lets tokens weigh other tokens.",
                                 }
                             ]
                         ),
                         tool_call_id="wiki-search",
                         name="wikipedia",
                     ),
-                    AIMessage(content="India is a country in South Asia."),
+                    AIMessage(content="Attention lets tokens weigh other tokens."),
                 ]
             }
 
     nodes = RAGNodes(retriever=None, llm=None)
     nodes._agent = FakeAgent()
     state = RAGState(
-        question="India Wikipedia",
+        question="What is attention in transformers?",
         retrieved_docs=[
             Document(
-                page_content="Unrelated PDF content",
+                page_content="Attention lets tokens weigh other tokens.",
                 metadata={"title": "attention.pdf", "source": "attention.pdf"},
             )
         ],
@@ -85,7 +101,30 @@ def test_generate_answer_returns_sources_from_agent_tool_calls() -> None:
 
     result = nodes.generate_answer(state)
 
-    assert result.answer == "India is a country in South Asia."
-    assert len(result.retrieved_docs) == 1
-    assert result.retrieved_docs[0].metadata["title"] == "India"
-    assert result.retrieved_docs[0].metadata["source"] == "https://en.wikipedia.org/wiki/India"
+    assert result.answer == "Attention lets tokens weigh other tokens."
+    assert len(result.retrieved_docs) == 2
+    assert result.retrieved_docs[0].metadata["title"] == "attention.pdf"
+    assert result.retrieved_docs[1].metadata["title"] == "Attention (machine learning)"
+    assert result.retrieved_docs[1].metadata["source"] == (
+        "https://en.wikipedia.org/wiki/Attention_(machine_learning)"
+    )
+    assert "attention.pdf" in agent_input["messages"][0].content
+
+
+def test_generate_answer_keeps_indexed_sources_without_tool_calls() -> None:
+    class FakeAgent:
+        def invoke(self, _input: dict) -> dict:
+            return {"messages": [AIMessage(content="A grounded answer.")]}
+
+    nodes = RAGNodes(retriever=None, llm=None)
+    nodes._agent = FakeAgent()
+    document = Document(
+        page_content="Attention lets tokens weigh other tokens.",
+        metadata={"title": "attention.pdf", "source": "data/attention.pdf"},
+    )
+
+    result = nodes.generate_answer(
+        RAGState(question="What is attention?", retrieved_docs=[document])
+    )
+
+    assert result.retrieved_docs == [document]
