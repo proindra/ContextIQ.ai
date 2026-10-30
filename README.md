@@ -1,22 +1,26 @@
 <div align="center">
 
-<h1><img src="assets/contextiq-brand.png" alt="ContextIQ.ai" width="196" /></h1>
+<p><img src="assets/contextiq-brand.png" alt="ContextIQ.ai" width="220" /></p>
 
-### Agentic document search with local-first embeddings and Groq-powered answers
+<p><strong>Search your documents. Get answers with sources.</strong></p>
 
+<p>
 <img src="https://img.shields.io/badge/Frontend-Vite%20%2B%20TypeScript-7C3AED?style=for-the-badge&logo=vite&logoColor=white&labelColor=312E81" alt="Vite and TypeScript" />
 <img src="https://img.shields.io/badge/Backend-FastAPI-14B8A6?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=042F2E" alt="FastAPI" />
 <img src="https://img.shields.io/badge/Server-Uvicorn-2FE85C?style=for-the-badge&logo=gunicorn&logoColor=white&labelColor=10300A" alt="Uvicorn" />
+</p>
+<p>
 <img src="https://img.shields.io/badge/Orchestration-LangGraph-2FE85C?style=for-the-badge&logo=langchain&logoColor=white&labelColor=10300A" alt="LangGraph orchestration" />
 <img src="https://img.shields.io/badge/LLM-Groq-F97316?style=for-the-badge&logo=groq&logoColor=white&labelColor=431407" alt="Groq" />
 <img src="https://img.shields.io/badge/Embeddings-Hugging%20Face-A855F7?style=for-the-badge&logo=huggingface&logoColor=white&labelColor=3B0764" alt="Hugging Face embeddings" />
+</p>
 
 </div>
 
-ContextIQ.ai searches your documents, uses a ReAct agent to gather context, and
-returns answers with source passages. The frontend is a lightweight
-Vite + TypeScript application; the backend is a FastAPI service that wraps the
-existing LangGraph, FAISS, Groq, and Wikipedia RAG pipeline.
+<p align="center">
+ContextIQ.ai searches your documents, uses a ReAct agent to gather context, and returns answers with source passages.
+The frontend is a lightweight Vite + TypeScript application; the backend is a FastAPI service powered by LangGraph, FAISS, Groq, and Wikipedia.
+</p>
 
 ## Features
 
