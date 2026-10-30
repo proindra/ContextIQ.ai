@@ -87,6 +87,15 @@ h1, h2, h3, h4, p { margin-top: 0; }
   letter-spacing: -0.04em;
 }
 
+.brand-ai {
+  color: transparent;
+  background: linear-gradient(110deg, var(--green), var(--purple), var(--pink), var(--green));
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: brand-gradient 5s ease-in-out infinite;
+}
+
 .nav-actions { display: flex; align-items: center; }
 
 .replay-button {
@@ -379,6 +388,7 @@ h1, h2, h3, h4, p { margin-top: 0; }
 @keyframes orbit-rotate { to { transform: rotate(360deg); } }
 @keyframes dot-pulse { 0%, 80%, 100% { opacity: 0.35; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-4px); } }
 @keyframes result-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes brand-gradient { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
 @media (max-width: 800px) {
   .steps-grid { grid-template-columns: 1fr; }

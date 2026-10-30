@@ -104,7 +104,7 @@ app.innerHTML = `
     </section>
   </main>
   <footer class="footer">
-    <a class="brand footer-brand" href="/">contextiq.ai</a>
+    <a class="brand footer-brand" href="/">contextiq.<span class="brand-ai">ai</span></a>
   </footer>
 `;
 
