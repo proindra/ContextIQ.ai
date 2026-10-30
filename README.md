@@ -210,6 +210,21 @@ to the ReAct agent. The agent calls Groq and may use its indexed-document and
 Wikipedia tools; the API returns the initial indexed passages plus any
 additional passages returned by those tools.
 
+## Q&A
+
+### Does restarting the backend reuse the existing document index?
+
+No. Each backend startup loads the configured URLs and PDFs, chunks and embeds
+their content, and builds a new FAISS index in memory. The index is not saved
+between restarts, so URLs are fetched again and PDFs are read again. The
+embedding model may be cached locally, but the document index is rebuilt.
+
+### Does the backend store chat history?
+
+No. Each `/api/search` request is processed independently using only the
+question in that request. The backend does not persist chat messages or carry
+conversation context between searches.
+
 ## Project structure
 
 ```text
