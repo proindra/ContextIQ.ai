@@ -42,7 +42,7 @@ existing LangGraph, FAISS, Groq, and Wikipedia RAG pipeline.
 ### 1. Clone the project
 
 ```powershell
-git clone https://github.com/proindra/ContextIQ.git
+git clone https://github.com/proindra/ContextIQ.ai.git
 cd ContextIQ
 ```
 
