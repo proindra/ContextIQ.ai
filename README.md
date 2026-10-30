@@ -1,6 +1,6 @@
 <div align="center">
 
-<h1><img src="assets/contextiq-brand.gif" alt="ContextIQ.ai" width="196" /></h1>
+<h1><img src="assets/contextiq-brand.png" alt="ContextIQ.ai" width="196" /></h1>
 
 ### Agentic document search with local-first embeddings and Groq-powered answers
 
