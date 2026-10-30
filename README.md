@@ -1,6 +1,6 @@
 <div align="center">
 
-<p><img src="assets/contextiq-brand.png" alt="ContextIQ.ai" width="220" /></p>
+<p><img src="assets/contextiq-ai-gradient.gif" alt="ContextIQ.ai" width="330" /></p>
 
 <p><strong>Search your documents. Get answers with sources.</strong></p>
 
