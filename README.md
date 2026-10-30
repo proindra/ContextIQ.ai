@@ -169,31 +169,33 @@ explicit `502` response.
 flowchart TB
     User --> UI[Frontend]
     UI -->|Question| APIIn[FastAPI]
-    APIIn --> Retrieve[LangGraph: retrieve passages]
-    Sources[Configured web pages and PDFs] --> Embeddings[Hugging Face embeddings]
+    APIIn --> Retrieve
+    Sources["Configured URLs and files in backend/data"] --> Split[Chunk documents]
+    Split --> Embeddings["Hugging Face embeddings"]
     Embeddings --> Index[(FAISS index)]
+
+    subgraph Graph["LangGraph: fixed node sequence"]
+        Retrieve["retriever node"] --> Responder["responder node"]
+    end
+
     Index --> Retrieve
-    Retrieve --> Route{Explicit Wikipedia request?}
+    Responder -->|Contains Wikipedia| DirectWiki["Direct Wikipedia API search"]
+    DirectWiki --> WikiPassages["Wikipedia passages"]
+    WikiPassages --> WikiLLM["Groq direct answer"]
+    WikiLLM --> WikiResult["Answer and Wikipedia sources"]
 
-    subgraph WikipediaPath["Explicit Wikipedia request"]
-        WikiAPI[Wikipedia API search] --> WikiPassages[Wikipedia passages]
-        WikiPassages --> WikiLLM[Groq answer]
-    end
+    Responder -->|Otherwise| Agent["ReAct agent"]
+    Agent -->|Model call| AgentLLM["Groq model"]
+    AgentLLM -->|Model response| Agent
+    Agent -.-> DocSearch["Indexed document search tool"]
+    DocSearch -->|Search query| Index
+    Index -->|Matching passages| DocSearch
+    DocSearch --> Agent
+    Agent -.-> WikiTool["Wikipedia search tool"]
+    WikiTool --> WikiToolResult["Wikipedia article extracts"]
+    WikiToolResult --> Agent
+    Agent --> RAGResult["Answer and retrieved sources"]
 
-    subgraph RAGPath["Normal RAG request"]
-        Agent[ReAct agent] --> Groq[Groq model]
-        Groq --> Agent
-        Agent -.-> DocSearch["Optional indexed document search"]
-        DocSearch -->|Query| Index
-        DocSearch -.-> Agent
-        Agent -.-> WikiTool["Optional Wikipedia API search tool"]
-        WikiTool -.-> Agent
-    end
-
-    Route -->|Yes: use Wikipedia only| WikiAPI
-    Route -->|No: include retrieved context| Agent
-    WikiLLM --> WikiResult[Answer + Wikipedia sources]
-    Agent --> RAGResult[Answer + sources used]
     WikiResult --> APIOut[FastAPI response]
     RAGResult --> APIOut
     APIOut -->|Answer and sources| UI
@@ -201,13 +203,14 @@ flowchart TB
 
 At startup, the backend chunks configured sources, embeds them with
 `sentence-transformers/all-MiniLM-L6-v2`, and builds an in-memory FAISS index.
-For each question, LangGraph first retrieves relevant passages. If the question
-explicitly requests Wikipedia, the responder searches Wikipedia directly and
-answers using only those Wikipedia passages; the initially retrieved indexed
-passages are not included as sources. For other questions, the responder sends
-the indexed passages to the ReAct agent as primary evidence. The agent can
-search the index for more passages and use Wikipedia when needed. Responses
-include sources from the selected answer path.
+For every question, LangGraph runs its `retriever` node and then its `responder`
+node; it has no separate routing node. Inside the responder, a question
+containing the word “Wikipedia” goes directly to Wikipedia search and a Groq
+answer call. That path uses only Wikipedia sources, even though the initial
+retrieval has already run. Other questions pass the initial retrieved passages
+to the ReAct agent. The agent calls Groq and may use its indexed-document and
+Wikipedia tools; the API returns the initial indexed passages plus any
+additional passages returned by those tools.
 
 ## Project structure
 
