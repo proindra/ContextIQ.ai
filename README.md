@@ -181,13 +181,13 @@ flowchart TB
     end
 
     subgraph RAGPath["Normal RAG request"]
-        Agent[ReAct agent] -->|Model call| Groq[Groq model]
-        Groq -->|Model response| Agent
-        Agent -. optional search .-> DocSearch[Indexed document search]
+        Agent[ReAct agent] --> Groq[Groq model]
+        Groq --> Agent
+        Agent -.-> DocSearch[Indexed document search (optional)]
         DocSearch -->|Query| Index
-        DocSearch -. retrieved passages .-> Agent
-        Agent -. optional lookup .-> WikiTool[Wikipedia API search tool]
-        WikiTool -. article extracts .-> Agent
+        DocSearch -.-> Agent
+        Agent -.-> WikiTool[Wikipedia API search tool (optional)]
+        WikiTool -.-> Agent
     end
 
     Route -->|Yes: use Wikipedia only| WikiAPI
