@@ -166,27 +166,37 @@ explicit `502` response.
 ## RAG architecture
 
 ```mermaid
-flowchart LR
+flowchart TB
     User --> UI[Frontend]
-    UI -->|Question| API[FastAPI]
-    API --> Retrieve
-    subgraph Workflow["LangGraph RAG"]
-        Retrieve[Retrieve indexed passages] --> Responder{Explicit Wikipedia request?}
-        Responder -->|Yes| WikiLookup[Wikipedia API]
-        WikiLookup --> WikiAnswer[Answer from Wikipedia passages only]
-        Responder -->|No| Agent[ReAct agent]
-        Agent --> AgentAnswer[Answer from indexed context and tool results]
+    UI -->|Question| APIIn[FastAPI]
+    APIIn --> Retrieve[LangGraph: retrieve passages]
+    Sources[Configured web pages and PDFs] --> Embeddings[Hugging Face embeddings]
+    Embeddings --> Index[(FAISS index)]
+    Index --> Retrieve
+    Retrieve --> Route{Explicit Wikipedia request?}
+
+    subgraph WikipediaPath["Explicit Wikipedia request"]
+        WikiAPI[Wikipedia API search] --> WikiPassages[Wikipedia passages]
+        WikiPassages --> WikiLLM[Groq answer]
     end
-    Index[(FAISS index)] --> Retrieve
-    Embeddings[Hugging Face embeddings] --> Index
-    Agent --> Groq[Groq model]
-    Agent -->|As needed| DocSearch[Indexed document search]
-    DocSearch --> Retrieve
-    Agent -->|Fallback when needed| WikiTool[Wikipedia search tool]
-    WikiTool --> WikiLookup
-    WikiAnswer -->|Answer and Wikipedia sources only| API
-    AgentAnswer -->|Answer and sources used| API
-    API -->|Answer and sources| UI
+
+    subgraph RAGPath["Normal RAG request"]
+        Agent[ReAct agent] -->|Model call| Groq[Groq model]
+        Groq -->|Model response| Agent
+        Agent -. optional search .-> DocSearch[Indexed document search]
+        DocSearch -->|Query| Index
+        DocSearch -. retrieved passages .-> Agent
+        Agent -. optional lookup .-> WikiTool[Wikipedia API search tool]
+        WikiTool -. article extracts .-> Agent
+    end
+
+    Route -->|Yes: use Wikipedia only| WikiAPI
+    Route -->|No: include retrieved context| Agent
+    WikiLLM --> WikiResult[Answer + Wikipedia sources]
+    Agent --> RAGResult[Answer + sources used]
+    WikiResult --> APIOut[FastAPI response]
+    RAGResult --> APIOut
+    APIOut -->|Answer and sources| UI
 ```
 
 At startup, the backend chunks configured sources, embeds them with
