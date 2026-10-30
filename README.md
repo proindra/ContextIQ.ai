@@ -183,10 +183,10 @@ flowchart TB
     subgraph RAGPath["Normal RAG request"]
         Agent[ReAct agent] --> Groq[Groq model]
         Groq --> Agent
-        Agent -.-> DocSearch[Indexed document search (optional)]
+        Agent -.-> DocSearch["Optional indexed document search"]
         DocSearch -->|Query| Index
         DocSearch -.-> Agent
-        Agent -.-> WikiTool[Wikipedia API search tool (optional)]
+        Agent -.-> WikiTool["Optional Wikipedia API search tool"]
         WikiTool -.-> Agent
     end
 
